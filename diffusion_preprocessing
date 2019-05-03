@@ -4,11 +4,11 @@ import os
 import subprocess
 import argparse
 import shutil
-import diffusion_functions.lpca_denoising as lpca_denoising
+import source.lpca_denoising as lpca_denoising
 import nibabel as nib
 import dipy.io
-import diffusion_functions.diffusion_preprocessing_functions as diffusion_preprocessing_functions
-import diffusion_functions.util as util
+import source.diffusion_preprocessing_functions as diffusion_preprocessing_functions
+import source.util as util
 import time
 
 ### DEFINE INPUTS ##############################################################
