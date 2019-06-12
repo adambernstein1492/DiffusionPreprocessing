@@ -29,7 +29,7 @@ def remove_nan(image_file):
     shutil.move(os.path.split(image_file)[0] + "tmp.nii", image_file)
 
 def progress_update(message, percent):
-    print("\r" + message + "%10.1f %%" % percent,)
+    print("\r" + message + "%10.1f %%" % percent, end='')
 
     if(percent == 100):
         print("\n")

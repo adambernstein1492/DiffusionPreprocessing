@@ -16,7 +16,7 @@ def lpca_denoising(data_path, bvals_path, bvecs_path, out_path, kernel_size=5, n
 
     # Allocate Space for Output
     data_padded = np.zeros((data.shape[0]+kernel_size-1, data.shape[1]+kernel_size-1, data.shape[2]+kernel_size-1, data.shape[3]))
-    data_padded[kernel_size/2:data.shape[0]+kernel_size/2,kernel_size/2:data.shape[1]+kernel_size/2,kernel_size/2:data.shape[2]+kernel_size/2,:] = data
+    data_padded[kernel_size//2:data.shape[0]+kernel_size//2,kernel_size//2:data.shape[1]+kernel_size//2,kernel_size//2:data.shape[2]+kernel_size//2,:] = data
     data_denoised_padded = np.zeros((data.shape[0]+kernel_size-1, data.shape[1]+kernel_size-1, data.shape[2]+kernel_size-1, data.shape[3]))
     weight_img = np.zeros(data_denoised_padded.shape)
 
