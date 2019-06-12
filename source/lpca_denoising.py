@@ -53,7 +53,7 @@ def lpca_denoising(data_path, bvals_path, bvecs_path, out_path, kernel_size=5, n
 
     # Set final image value
     data_denoised_padded /= weight_img
-    data_denoised = data_denoised_padded[kernel_size/2:data.shape[0]+kernel_size/2, kernel_size/2:data.shape[1]+kernel_size/2, kernel_size/2:data.shape[2]+kernel_size/2, :]
+    data_denoised = data_denoised_padded[kernel_size//2:data.shape[0]+kernel_size//2, kernel_size//2:data.shape[1]+kernel_size//2, kernel_size//2:data.shape[2]+kernel_size//2, :]
 
     # Save Denoised Image to NIFTI
     denoised_img = nib.Nifti1Image(data_denoised, data_nii.affine, data_nii.header)
