@@ -569,8 +569,13 @@ if args.software == "TORTOISE_STANDARD":
 if args.denoising:
     os.makedirs("LPCADenoising")
 
-    print("Running Denoising")
-    lpca_denoising.lpca_denoising("dwi.nii", "bval", "bvec", "LPCADenoising/dwi_denoised.nii")
+    print("Running LPCA Denoising")
+
+    if os.path.exists("mask.nii"):
+        lpca_denoising.lpca_denoising("dwi.nii", "bval", "bvec", "LPCADenoising/dwi_denoised.nii", "mask.nii")
+    else:
+        lpca_denoising.lpca_denoising("dwi.nii", "bval", "bvec", "LPCADenoising/dwi_denoised.nii")
+
 
     os.remove("dwi.nii")
     shutil.copyfile("LPCADenoising/dwi_denoised.nii", "dwi.nii")

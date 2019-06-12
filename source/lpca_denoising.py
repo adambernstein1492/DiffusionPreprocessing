@@ -3,13 +3,23 @@ import nibabel as nib
 import dipy.io
 import scipy.special
 import scipy.ndimage
+import time
 from .util import progress_update
 
 
-def lpca_denoising(data_path, bvals_path, bvecs_path, out_path, kernel_size=5, noise_map_kernel_size=3, threshold_factor=2.3):
+def lpca_denoising(data_path, bvals_path, bvecs_path, out_path, mask_path="None", kernel_size=5, noise_map_kernel_size=3, threshold_factor=2.3):
     # Load in the Data
     data_nii,bvals,_ = load_diffusion_data(data_path, bvals_path, bvecs_path)
     data = data_nii.get_data().astype('float64')
+
+    # Load in Mask (or make fake mask)
+    if mask_path != "None":
+        mask = nib.load(mask_path)
+        mask = mask.get_data()
+
+    else:
+        mask = np.ones((data.shape[0], data.shape[1], data.shape[2]))
+
 
     # Estimate the Noise Map
     threshold_value = noise_map(data,bvals)
@@ -24,25 +34,33 @@ def lpca_denoising(data_path, bvals_path, bvecs_path, out_path, kernel_size=5, n
     count = 0.0
     percent_prev = 0.0
 
+
+    t0 = time.time()
+
     num_vox = data.shape[0] * data.shape[1] * data.shape[2]
     for i in range (data.shape[0]):
         for j in range(data.shape[1]):
             for k in range(data.shape[2]):
-                # Isolate local data cube
-                cube = data_padded[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size,:]
-                pca_data = np.reshape(cube, (kernel_size**3, data.shape[3]))
 
-                # Local PCA
-                eigvals, eigvecs, princomps, mean_value = pca(pca_data)
+                # Check if in mask
+                in_mask = np.sum(mask[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size])
 
-                # Reduce Data
-                filt_pca_data, num_eig_vals = filter_prin_comps(eigvals, eigvecs, princomps, threshold_value[i,j,k])
-                filt_pca_data += mean_value
-                filt_pca_data = np.reshape(filt_pca_data, (kernel_size, kernel_size, kernel_size, data.shape[3]))
+                if in_mask != 0:
+                    # Isolate local data cube
+                    cube = data_padded[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size,:]
+                    pca_data = np.reshape(cube, (kernel_size**3, data.shape[3]))
 
-                # Weight Denoised Values
-                data_denoised_padded[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size,:] += (filt_pca_data * (1.0/num_eig_vals))
-                weight_img[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size,:] += (1.0/num_eig_vals)
+                    # Local PCA
+                    eigvals, eigvecs, princomps, mean_value = pca(pca_data)
+
+                    # Reduce Data
+                    filt_pca_data, num_eig_vals = filter_prin_comps(eigvals, eigvecs, princomps, threshold_value[i,j,k])
+                    filt_pca_data += mean_value
+                    filt_pca_data = np.reshape(filt_pca_data, (kernel_size, kernel_size, kernel_size, data.shape[3]))
+
+                    # Weight Denoised Values
+                    data_denoised_padded[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size,:] += (filt_pca_data * (1.0/num_eig_vals))
+                    weight_img[i:i+kernel_size,j:j+kernel_size,k:k+kernel_size,:] += (1.0/num_eig_vals)
 
                 # Update Progress
                 count += 1.0
@@ -50,6 +68,11 @@ def lpca_denoising(data_path, bvals_path, bvecs_path, out_path, kernel_size=5, n
                 if(percent != percent_prev):
                     progress_update("Denoising: ", percent)
                     percent_prev = percent
+
+    t1 = time.time()
+
+    total = t1-t0
+    print(total)
 
     # Set final image value
     data_denoised_padded /= weight_img
